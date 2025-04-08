@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { toast } from "sonner";
 
@@ -7,6 +6,7 @@ interface Location {
   country: string;
   latitude: number;
   longitude: number;
+  isFavorite?: boolean;
 }
 
 interface CurrentWeather {
@@ -26,6 +26,7 @@ interface DailyForecast {
   low: number;
   condition: string;
   precipitation: number;
+  wind: number;
 }
 
 interface HourlyForecast {
@@ -33,6 +34,51 @@ interface HourlyForecast {
   temperature: number;
   condition: string;
   precipitation: number;
+  wind?: number;
+}
+
+interface WeatherAlert {
+  id: string;
+  type: 'danger' | 'warning' | 'caution';
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  affectedAreas: string[];
+  isRead: boolean;
+}
+
+interface AirQualityData {
+  aqi: number;
+  status: 'Good' | 'Moderate' | 'Unhealthy' | 'Very Unhealthy' | 'Hazardous';
+  components: {
+    pm25: number;
+    pm10: number;
+    co: number;
+    no2: number;
+    o3: number;
+  };
+  healthTips: string[];
+}
+
+interface PollenData {
+  overall: number; // 0-5 scale
+  types: {
+    tree: number;
+    grass: number;
+    weed: number;
+  };
+  forecast: { date: string; level: number }[];
+}
+
+interface AppSettings {
+  temperatureUnit: 'celsius' | 'fahrenheit';
+  windSpeedUnit: 'kmh' | 'mph';
+  notifications: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
 }
 
 interface WeatherStore {
@@ -40,8 +86,17 @@ interface WeatherStore {
   currentWeather: CurrentWeather;
   dailyForecast: DailyForecast[];
   hourlyForecast: HourlyForecast[];
+  alerts: WeatherAlert[];
+  airQuality: AirQualityData;
+  pollen: PollenData;
+  savedLocations: Location[];
+  settings: AppSettings;
+  
   getCurrentLocation: () => void;
   changeLocation: (city: string) => void;
+  toggleFavorite: (city: string) => void;
+  dismissAlert: (id: string) => void;
+  updateSettings: (settings: Partial<AppSettings>) => void;
 }
 
 // Mock data
@@ -85,7 +140,8 @@ const generateDailyForecast = (): DailyForecast[] => {
       high: Math.floor(Math.random() * 10) + 20,
       low: Math.floor(Math.random() * 10) + 10,
       condition: conditions[Math.floor(Math.random() * conditions.length)],
-      precipitation: Math.floor(Math.random() * 100)
+      precipitation: Math.floor(Math.random() * 100),
+      wind: Math.floor(Math.random() * 20) + 2
     });
   }
   
@@ -112,22 +168,125 @@ const generateHourlyForecast = (): HourlyForecast[] => {
   return forecast;
 };
 
+// Generate mock alerts
+const generateMockAlerts = (): WeatherAlert[] => {
+  const alertTypes: Array<'danger' | 'warning' | 'caution'> = ['danger', 'warning', 'caution'];
+  const alertTitles = [
+    'Flash Flood Warning',
+    'Severe Thunderstorm Watch',
+    'Heat Advisory',
+    'Wind Advisory',
+    'Dense Fog Advisory'
+  ];
+  const alerts: WeatherAlert[] = [];
+  
+  for (let i = 0; i < 3; i++) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(start.getHours() + i);
+    
+    const end = new Date(start);
+    end.setHours(end.getHours() + 4 + i);
+    
+    alerts.push({
+      id: `alert-${i}`,
+      type: alertTypes[i % alertTypes.length],
+      title: alertTitles[i % alertTitles.length],
+      description: `This is a ${alertTypes[i % alertTypes.length]} level weather alert. Please take necessary precautions.`,
+      startsAt: start.toISOString(),
+      endsAt: end.toISOString(),
+      affectedAreas: ['Downtown', 'West Side', 'Eastern Hills'],
+      isRead: false
+    });
+  }
+  
+  return alerts;
+};
+
+// Generate mock air quality data
+const generateMockAirQuality = (): AirQualityData => {
+  const aqi = Math.floor(Math.random() * 150) + 1;
+  let status: AirQualityData['status'] = 'Good';
+  
+  if (aqi > 100) status = 'Unhealthy';
+  else if (aqi > 50) status = 'Moderate';
+  
+  return {
+    aqi,
+    status,
+    components: {
+      pm25: Math.floor(Math.random() * 50) + 1,
+      pm10: Math.floor(Math.random() * 70) + 1,
+      co: Math.floor(Math.random() * 10) + 0.5,
+      no2: Math.floor(Math.random() * 40) + 1,
+      o3: Math.floor(Math.random() * 60) + 1,
+    },
+    healthTips: [
+      'Limit outdoor activities during peak pollution hours',
+      'Keep windows closed when air quality is poor',
+      'Consider using an air purifier indoors',
+      'Stay hydrated and maintain healthy indoor humidity'
+    ]
+  };
+};
+
+// Generate mock pollen data
+const generateMockPollenData = (): PollenData => {
+  const forecast = [];
+  const today = new Date();
+  
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    forecast.push({
+      date: date.toISOString(),
+      level: Math.floor(Math.random() * 6)
+    });
+  }
+  
+  return {
+    overall: Math.floor(Math.random() * 6),
+    types: {
+      tree: Math.floor(Math.random() * 6),
+      grass: Math.floor(Math.random() * 6),
+      weed: Math.floor(Math.random() * 6)
+    },
+    forecast
+  };
+};
+
 export const useWeatherStore = create<WeatherStore>((set) => ({
   location: cities[0],
   currentWeather: generateRandomWeather(),
   dailyForecast: generateDailyForecast(),
   hourlyForecast: generateHourlyForecast(),
+  alerts: generateMockAlerts(),
+  airQuality: generateMockAirQuality(),
+  pollen: generateMockPollenData(),
+  savedLocations: [...cities.slice(0, 3).map(city => ({...city, isFavorite: Math.random() > 0.5}))],
+  settings: {
+    temperatureUnit: 'celsius',
+    windSpeedUnit: 'kmh',
+    notifications: {
+      email: true,
+      push: true,
+      sms: false
+    }
+  },
   
   getCurrentLocation: () => {
     toast.promise(
       new Promise<void>((resolve) => {
         // Simulate a delay
         setTimeout(() => {
-          set(() => ({
+          set((state) => ({
             location: cities[Math.floor(Math.random() * cities.length)],
             currentWeather: generateRandomWeather(),
             dailyForecast: generateDailyForecast(),
-            hourlyForecast: generateHourlyForecast()
+            hourlyForecast: generateHourlyForecast(),
+            alerts: generateMockAlerts(),
+            airQuality: generateMockAirQuality(),
+            pollen: generateMockPollenData()
           }));
           resolve();
         }, 1000);
@@ -144,16 +303,67 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
     const newLocation = cities.find(loc => loc.city.toLowerCase() === city.toLowerCase());
     
     if (newLocation) {
-      set(() => ({
+      set((state) => ({
         location: newLocation,
         currentWeather: generateRandomWeather(),
         dailyForecast: generateDailyForecast(),
-        hourlyForecast: generateHourlyForecast()
+        hourlyForecast: generateHourlyForecast(),
+        alerts: generateMockAlerts(),
+        airQuality: generateMockAirQuality(),
+        pollen: generateMockPollenData()
       }));
       
       toast.success(`Weather updated for ${newLocation.city}`);
     } else {
       toast.error("Location not found");
     }
+  },
+  
+  toggleFavorite: (city: string) => {
+    set((state) => {
+      const locationIndex = state.savedLocations.findIndex(
+        loc => loc.city.toLowerCase() === city.toLowerCase()
+      );
+      
+      // If found, toggle favorite
+      if (locationIndex !== -1) {
+        const updatedLocations = [...state.savedLocations];
+        updatedLocations[locationIndex] = {
+          ...updatedLocations[locationIndex],
+          isFavorite: !updatedLocations[locationIndex].isFavorite
+        };
+        
+        return { savedLocations: updatedLocations };
+      }
+      
+      // If not in saved locations, find in cities and add it
+      const cityToAdd = cities.find(c => c.city.toLowerCase() === city.toLowerCase());
+      if (cityToAdd) {
+        return { 
+          savedLocations: [
+            ...state.savedLocations, 
+            { ...cityToAdd, isFavorite: true }
+          ]
+        };
+      }
+      
+      return state;
+    });
+  },
+  
+  dismissAlert: (id: string) => {
+    set((state) => ({
+      alerts: state.alerts.filter(alert => alert.id !== id)
+    }));
+  },
+  
+  updateSettings: (newSettings: Partial<AppSettings>) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        ...newSettings
+      }
+    }));
+    toast.success("Settings updated");
   }
 }));

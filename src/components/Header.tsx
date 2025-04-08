@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Cloud, CloudRain, MapPin, Menu, Settings, Sun } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Cloud, CloudRain, MapPin, Menu, Settings, Sun, Wind, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -9,6 +9,11 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 const Header = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path ? "text-primary font-medium" : "hover:text-primary transition-colors";
+  };
 
   return (
     <header className="w-full py-4 px-6">
@@ -18,7 +23,7 @@ const Header = () => {
             <Sun className="h-6 w-6 text-weather-sunny animate-spin-slow" />
             <Cloud className="h-8 w-8 text-weather-cloudy absolute -right-2 -top-1" />
           </div>
-          <span className="text-xl font-semibold ml-2">WeatherCanvas</span>
+          <Link to="/" className="text-xl font-semibold ml-2">WeatherCanvas</Link>
         </div>
 
         {isMobile ? (
@@ -36,25 +41,37 @@ const Header = () => {
               <nav className="absolute top-full right-0 mt-2 p-4 glass rounded-lg z-10 min-w-[200px] animate-fade-in">
                 <ul className="space-y-4">
                   <li>
-                    <Link to="/" className="flex items-center gap-2 hover:text-primary" onClick={() => setMenuOpen(false)}>
+                    <Link to="/" className={`flex items-center gap-2 ${isActive("/")}`} onClick={() => setMenuOpen(false)}>
                       <Sun size={16} />
                       <span>Home</span>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/forecast" className="flex items-center gap-2 hover:text-primary" onClick={() => setMenuOpen(false)}>
+                    <Link to="/forecast" className={`flex items-center gap-2 ${isActive("/forecast")}`} onClick={() => setMenuOpen(false)}>
                       <CloudRain size={16} />
                       <span>Forecast</span>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/locations" className="flex items-center gap-2 hover:text-primary" onClick={() => setMenuOpen(false)}>
+                    <Link to="/locations" className={`flex items-center gap-2 ${isActive("/locations")}`} onClick={() => setMenuOpen(false)}>
                       <MapPin size={16} />
                       <span>Locations</span>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/settings" className="flex items-center gap-2 hover:text-primary" onClick={() => setMenuOpen(false)}>
+                    <Link to="/alerts" className={`flex items-center gap-2 ${isActive("/alerts")}`} onClick={() => setMenuOpen(false)}>
+                      <Wind size={16} />
+                      <span>Alerts</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/air-quality" className={`flex items-center gap-2 ${isActive("/air-quality")}`} onClick={() => setMenuOpen(false)}>
+                      <Gauge size={16} />
+                      <span>Air Quality</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/settings" className={`flex items-center gap-2 ${isActive("/settings")}`} onClick={() => setMenuOpen(false)}>
                       <Settings size={16} />
                       <span>Settings</span>
                     </Link>
@@ -71,25 +88,37 @@ const Header = () => {
             <nav>
               <ul className="flex items-center gap-6">
                 <li>
-                  <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
+                  <Link to="/" className={`flex items-center gap-1 ${isActive("/")}`}>
                     <Sun size={16} />
                     <span>Home</span>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/forecast" className="flex items-center gap-1 hover:text-primary transition-colors">
+                  <Link to="/forecast" className={`flex items-center gap-1 ${isActive("/forecast")}`}>
                     <CloudRain size={16} />
                     <span>Forecast</span>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/locations" className="flex items-center gap-1 hover:text-primary transition-colors">
+                  <Link to="/locations" className={`flex items-center gap-1 ${isActive("/locations")}`}>
                     <MapPin size={16} />
                     <span>Locations</span>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/settings" className="flex items-center gap-1 hover:text-primary transition-colors">
+                  <Link to="/alerts" className={`flex items-center gap-1 ${isActive("/alerts")}`}>
+                    <Wind size={16} />
+                    <span>Alerts</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/air-quality" className={`flex items-center gap-1 ${isActive("/air-quality")}`}>
+                    <Gauge size={16} />
+                    <span>Air Quality</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/settings" className={`flex items-center gap-1 ${isActive("/settings")}`}>
                     <Settings size={16} />
                     <span>Settings</span>
                   </Link>

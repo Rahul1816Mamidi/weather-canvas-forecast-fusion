@@ -117,6 +117,23 @@ export default {
           "50%": { transform: "translateY(20px) scale(1)", opacity: "0.8" },
           "100%": { transform: "translateY(40px) scale(0.9)", opacity: "0" },
         },
+        "lightning": {
+          "0%, 5%, 10%, 90%, 100%": { opacity: "0" },
+          "6%, 8%": { opacity: "0.7" },
+          "7%": { opacity: "1" },
+        },
+        "scale-in": {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "scale-out": {
+          from: { transform: "scale(1)", opacity: "1" },
+          to: { transform: "scale(0.95)", opacity: "0" },
+        },
+        "breathing": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -128,6 +145,9 @@ export default {
         "fade-in": "fade-in 0.5s ease-out",
         "slide-in-right": "slide-in-right 0.5s ease-out",
         "rain-drop": "rain-drop 1.5s linear infinite",
+        "scale-in": "scale-in 0.2s ease-out",
+        "scale-out": "scale-out 0.2s ease-out",
+        "breathing": "breathing 8s ease-in-out infinite",
       },
     },
   },
