@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Thermometer, Wind, Bell, Info, Globe, Mail, Phone, MessageCircle } from "lucide-react";
+import { Thermometer, Wind, Bell, Info, Globe, Mail, Phone, MessageCircle, Sun, Cloud } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const SettingsPage = () => {

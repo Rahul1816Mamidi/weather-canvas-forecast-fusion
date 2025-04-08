@@ -178,8 +178,9 @@ const ForecastPage = () => {
                   <h3 className="text-lg font-medium mb-4">Precipitation Forecast (7 Day)</h3>
                   <div className="h-[300px] w-full">
                     <ChartContainer config={{ 
-                      precipitation: { color: '#3b82f6', 
-                      theme: { dark: '#60a5fa', light: '#3b82f6' } }
+                      precipitation: { 
+                        theme: { dark: '#60a5fa', light: '#3b82f6' }
+                      }
                     }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={precipChartData}>
