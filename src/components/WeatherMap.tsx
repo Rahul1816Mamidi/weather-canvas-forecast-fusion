@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface Location {
   city: string;
@@ -28,6 +29,7 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
     localStorage.getItem('mapTilerToken') || ""
   );
   const [showTokenInput, setShowTokenInput] = useState<boolean>(!mapTilerToken);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     if (!mapContainer.current || !mapTilerToken) return;
@@ -46,17 +48,29 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
       container: mapContainer.current,
       style: mapStyle,
       center: [location.longitude, location.latitude],
-      zoom: 9,
+      zoom: isMobile ? 8 : 9, // Slightly zoomed out on mobile
+      attributionControl: false,
     });
 
     // Add navigation controls
     map.current.addControl(
-      new maplibregl.NavigationControl(),
+      new maplibregl.NavigationControl({
+        showCompass: !isMobile,
+        showZoom: true,
+        visualizePitch: !isMobile
+      }),
       'top-left'
     );
 
+    // Add attribution control in a more mobile-friendly position
+    map.current.addControl(new maplibregl.AttributionControl({
+      compact: isMobile
+    }), 'bottom-left');
+
     // Add a marker for the current location
-    new maplibregl.Marker()
+    new maplibregl.Marker({
+      scale: isMobile ? 0.8 : 1 // Slightly smaller marker on mobile
+    })
       .setLngLat([location.longitude, location.latitude])
       .addTo(map.current);
 
@@ -101,7 +115,7 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
           type: 'circle',
           source: 'rain',
           paint: {
-            'circle-radius': 70,
+            'circle-radius': isMobile ? 50 : 70,
             'circle-color': '#2563eb',
             'circle-opacity': 0.4,
             'circle-blur': 0.8,
@@ -135,7 +149,7 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
           type: 'circle',
           source: 'storms',
           paint: {
-            'circle-radius': 50,
+            'circle-radius': isMobile ? 40 : 50,
             'circle-color': '#dc2626',
             'circle-opacity': 0.6,
             'circle-blur': 0.5,
@@ -144,13 +158,18 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
       }
     });
 
+    // Enable touch rotation for mobile devices
+    if (isMobile) {
+      map.current.touchZoomRotate.enableRotation();
+    }
+
     return () => {
       if (map.current) {
         map.current.remove();
         map.current = null;
       }
     };
-  }, [mapTilerToken, viewType, layers]);
+  }, [mapTilerToken, viewType, layers, isMobile]);
 
   // Update map when time offset changes (for forecast animations)
   useEffect(() => {
@@ -214,23 +233,23 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
 
   if (showTokenInput) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center h-full w-full bg-muted/20">
-        <Alert className="mb-4">
+      <div className="p-3 md:p-6 flex flex-col items-center justify-center h-full w-full bg-muted/20">
+        <Alert className="mb-4 max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>MapTiler API Key Required</AlertTitle>
-          <AlertDescription>
+          <AlertDescription className="text-xs md:text-sm">
             To display the weather radar map, please enter your MapTiler API key.
             You can get a free key at <a href="https://cloud.maptiler.com/account/keys/" target="_blank" rel="noopener noreferrer" className="underline">cloud.maptiler.com</a>.
           </AlertDescription>
         </Alert>
         
-        <form onSubmit={handleTokenSubmit} className="space-y-4 w-full max-w-md">
+        <form onSubmit={handleTokenSubmit} className="space-y-3 md:space-y-4 w-full max-w-md">
           <Input 
             type="text" 
             value={mapTilerToken} 
             onChange={(e) => setMapTilerToken(e.target.value)} 
             placeholder="Enter your MapTiler API key" 
-            className="w-full"
+            className="w-full text-sm"
           />
           <Button type="submit" className="w-full">
             Load Map
@@ -241,6 +260,6 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
   }
 
   return (
-    <div ref={mapContainer} className="w-full h-full min-h-[400px]" />
+    <div ref={mapContainer} className="w-full h-full min-h-[300px] md:min-h-[400px]" />
   );
 };
