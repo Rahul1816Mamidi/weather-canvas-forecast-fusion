@@ -1,133 +1,98 @@
 
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Cloud, CloudRain, MapPin, Menu, Settings, Sun, Wind, Gauge } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import ThemeToggle from "./ThemeToggle";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { useTheme } from '@/hooks/use-theme';
+import { Sun, Moon, Menu, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 const Header = () => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const location = useLocation();
-
-  const isActive = (path: string) => {
-    return location.pathname === path ? "text-primary font-medium" : "hover:text-primary transition-colors";
-  };
+  const { theme, setTheme } = useTheme();
+  
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Forecast', path: '/forecast' },
+    { name: 'Locations', path: '/locations' },
+    { name: 'Alerts', path: '/alerts' },
+    { name: 'Custom Alerts', path: '/custom-alerts' },
+    { name: 'Air Quality', path: '/air-quality' },
+    { name: 'Settings', path: '/settings' },
+  ];
 
   return (
-    <header className="w-full py-4 px-6">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+    <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-30 w-full">
+      <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex items-center relative">
-            <Sun className="h-6 w-6 text-weather-sunny animate-spin-slow" />
-            <Cloud className="h-8 w-8 text-weather-cloudy absolute -right-2 -top-1" />
-          </div>
-          <Link to="/" className="text-xl font-semibold ml-2">WeatherCanvas</Link>
+          <NavLink to="/" className="flex items-center gap-2">
+            <span className="text-xl font-bold tracking-tight">WeatherCanvas</span>
+          </NavLink>
         </div>
 
-        {isMobile ? (
-          <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="relative z-20"
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-primary font-medium'
+                  : 'text-muted-foreground hover:text-primary transition-colors'
+              }
+              end={item.path === '/'}
             >
-              <Menu />
-            </Button>
-            
-            {menuOpen && (
-              <nav className="absolute top-full right-0 mt-2 p-4 glass rounded-lg z-10 min-w-[200px] animate-fade-in">
-                <ul className="space-y-4">
-                  <li>
-                    <Link to="/" className={`flex items-center gap-2 ${isActive("/")}`} onClick={() => setMenuOpen(false)}>
-                      <Sun size={16} />
-                      <span>Home</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/forecast" className={`flex items-center gap-2 ${isActive("/forecast")}`} onClick={() => setMenuOpen(false)}>
-                      <CloudRain size={16} />
-                      <span>Forecast</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/locations" className={`flex items-center gap-2 ${isActive("/locations")}`} onClick={() => setMenuOpen(false)}>
-                      <MapPin size={16} />
-                      <span>Locations</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/alerts" className={`flex items-center gap-2 ${isActive("/alerts")}`} onClick={() => setMenuOpen(false)}>
-                      <Wind size={16} />
-                      <span>Alerts</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/air-quality" className={`flex items-center gap-2 ${isActive("/air-quality")}`} onClick={() => setMenuOpen(false)}>
-                      <Gauge size={16} />
-                      <span>Air Quality</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/settings" className={`flex items-center gap-2 ${isActive("/settings")}`} onClick={() => setMenuOpen(false)}>
-                      <Settings size={16} />
-                      <span>Settings</span>
-                    </Link>
-                  </li>
-                  <li className="pt-2 border-t">
-                    <ThemeToggle />
-                  </li>
-                </ul>
+              {item.name}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle Theme"
+            className="mr-2"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          </Button>
+          
+          {/* Mobile Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <SheetHeader className="mb-4">
+                <SheetTitle>WeatherCanvas</SheetTitle>
+                <SheetDescription>
+                  Navigate to different sections of the app
+                </SheetDescription>
+              </SheetHeader>
+              <nav className="flex flex-col space-y-4">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `py-2 px-3 rounded-md ${
+                        isActive
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'hover:bg-secondary/80'
+                      }`
+                    }
+                    end={item.path === '/'}
+                  >
+                    {item.name}
+                  </NavLink>
+                ))}
               </nav>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-4">
-            <nav>
-              <ul className="flex items-center gap-6">
-                <li>
-                  <Link to="/" className={`flex items-center gap-1 ${isActive("/")}`}>
-                    <Sun size={16} />
-                    <span>Home</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/forecast" className={`flex items-center gap-1 ${isActive("/forecast")}`}>
-                    <CloudRain size={16} />
-                    <span>Forecast</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/locations" className={`flex items-center gap-1 ${isActive("/locations")}`}>
-                    <MapPin size={16} />
-                    <span>Locations</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/alerts" className={`flex items-center gap-1 ${isActive("/alerts")}`}>
-                    <Wind size={16} />
-                    <span>Alerts</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/air-quality" className={`flex items-center gap-1 ${isActive("/air-quality")}`}>
-                    <Gauge size={16} />
-                    <span>Air Quality</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/settings" className={`flex items-center gap-1 ${isActive("/settings")}`}>
-                    <Settings size={16} />
-                    <span>Settings</span>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-            <ThemeToggle />
-          </div>
-        )}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

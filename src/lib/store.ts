@@ -71,6 +71,22 @@ interface PollenData {
   forecast: { date: string; level: number }[];
 }
 
+interface CustomAlert {
+  id: string;
+  name: string;
+  type: 'temperature' | 'wind' | 'humidity' | 'precipitation' | 'airQuality';
+  condition: 'above' | 'below' | 'equals';
+  value: number;
+  locations: string[];  // City names
+  channels: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+  isActive: boolean;
+  lastTriggered?: string; // ISO date string
+}
+
 interface AppSettings {
   temperatureUnit: 'celsius' | 'fahrenheit';
   windSpeedUnit: 'kmh' | 'mph';
@@ -91,15 +107,19 @@ interface WeatherStore {
   pollen: PollenData;
   savedLocations: Location[];
   settings: AppSettings;
+  customAlerts: CustomAlert[];
   
   getCurrentLocation: () => void;
   changeLocation: (city: string) => void;
   toggleFavorite: (city: string) => void;
   dismissAlert: (id: string) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
+  addCustomAlert: (alert: Omit<CustomAlert, 'id'>) => void;
+  updateCustomAlert: (id: string, alert: Partial<CustomAlert>) => void;
+  deleteCustomAlert: (id: string) => void;
+  toggleCustomAlert: (id: string) => void;
 }
 
-// Mock data
 const conditions = ["Sunny", "Cloudy", "Rainy", "Snowy"];
 const cities: Location[] = [
   { city: "New York", country: "USA", latitude: 40.7128, longitude: -74.006 },
@@ -109,7 +129,6 @@ const cities: Location[] = [
   { city: "Sydney", country: "Australia", latitude: -33.8688, longitude: 151.2093 },
 ];
 
-// Generate random weather data for demo purposes
 const generateRandomWeather = (): CurrentWeather => {
   const tempBase = Math.floor(Math.random() * 25) + 5;
   const condition = conditions[Math.floor(Math.random() * conditions.length)];
@@ -126,7 +145,6 @@ const generateRandomWeather = (): CurrentWeather => {
   };
 };
 
-// Generate daily forecast
 const generateDailyForecast = (): DailyForecast[] => {
   const forecast: DailyForecast[] = [];
   const today = new Date();
@@ -148,7 +166,6 @@ const generateDailyForecast = (): DailyForecast[] => {
   return forecast;
 };
 
-// Generate hourly forecast
 const generateHourlyForecast = (): HourlyForecast[] => {
   const forecast: HourlyForecast[] = [];
   const currentHour = new Date().getHours();
@@ -168,7 +185,6 @@ const generateHourlyForecast = (): HourlyForecast[] => {
   return forecast;
 };
 
-// Generate mock alerts
 const generateMockAlerts = (): WeatherAlert[] => {
   const alertTypes: Array<'danger' | 'warning' | 'caution'> = ['danger', 'warning', 'caution'];
   const alertTitles = [
@@ -203,7 +219,6 @@ const generateMockAlerts = (): WeatherAlert[] => {
   return alerts;
 };
 
-// Generate mock air quality data
 const generateMockAirQuality = (): AirQualityData => {
   const aqi = Math.floor(Math.random() * 150) + 1;
   let status: AirQualityData['status'] = 'Good';
@@ -230,7 +245,6 @@ const generateMockAirQuality = (): AirQualityData => {
   };
 };
 
-// Generate mock pollen data
 const generateMockPollenData = (): PollenData => {
   const forecast = [];
   const today = new Date();
@@ -255,6 +269,40 @@ const generateMockPollenData = (): PollenData => {
   };
 };
 
+const generateMockCustomAlerts = (): CustomAlert[] => {
+  return [
+    {
+      id: 'custom-1',
+      name: 'Freezing Temperature Alert',
+      type: 'temperature',
+      condition: 'below',
+      value: 0,
+      locations: ['New York', 'London'],
+      channels: {
+        email: true,
+        push: true,
+        sms: false
+      },
+      isActive: true,
+      lastTriggered: new Date(Date.now() - 86400000).toISOString() // 24 hours ago
+    },
+    {
+      id: 'custom-2',
+      name: 'High Wind Alert',
+      type: 'wind',
+      condition: 'above',
+      value: 20,
+      locations: ['Tokyo'],
+      channels: {
+        email: true,
+        push: false,
+        sms: true
+      },
+      isActive: true
+    }
+  ];
+};
+
 export const useWeatherStore = create<WeatherStore>((set) => ({
   location: cities[0],
   currentWeather: generateRandomWeather(),
@@ -264,6 +312,7 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
   airQuality: generateMockAirQuality(),
   pollen: generateMockPollenData(),
   savedLocations: [...cities.slice(0, 3).map(city => ({...city, isFavorite: Math.random() > 0.5}))],
+  customAlerts: generateMockCustomAlerts(),
   settings: {
     temperatureUnit: 'celsius',
     windSpeedUnit: 'kmh',
@@ -277,7 +326,6 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
   getCurrentLocation: () => {
     toast.promise(
       new Promise<void>((resolve) => {
-        // Simulate a delay
         setTimeout(() => {
           set((state) => ({
             location: cities[Math.floor(Math.random() * cities.length)],
@@ -325,7 +373,6 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
         loc => loc.city.toLowerCase() === city.toLowerCase()
       );
       
-      // If found, toggle favorite
       if (locationIndex !== -1) {
         const updatedLocations = [...state.savedLocations];
         updatedLocations[locationIndex] = {
@@ -336,7 +383,6 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
         return { savedLocations: updatedLocations };
       }
       
-      // If not in saved locations, find in cities and add it
       const cityToAdd = cities.find(c => c.city.toLowerCase() === city.toLowerCase());
       if (cityToAdd) {
         return { 
@@ -365,5 +411,42 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
       }
     }));
     toast.success("Settings updated");
+  },
+  
+  addCustomAlert: (alert) => {
+    set((state) => ({
+      customAlerts: [
+        ...state.customAlerts,
+        {
+          ...alert,
+          id: `custom-${Date.now()}`
+        }
+      ]
+    }));
+    toast.success("Custom alert created");
+  },
+  
+  updateCustomAlert: (id, alert) => {
+    set((state) => ({
+      customAlerts: state.customAlerts.map(item => 
+        item.id === id ? { ...item, ...alert } : item
+      )
+    }));
+    toast.success("Alert updated");
+  },
+  
+  deleteCustomAlert: (id) => {
+    set((state) => ({
+      customAlerts: state.customAlerts.filter(alert => alert.id !== id)
+    }));
+    toast.success("Alert deleted");
+  },
+  
+  toggleCustomAlert: (id) => {
+    set((state) => ({
+      customAlerts: state.customAlerts.map(alert => 
+        alert.id === id ? { ...alert, isActive: !alert.isActive } : alert
+      )
+    }));
   }
 }));
