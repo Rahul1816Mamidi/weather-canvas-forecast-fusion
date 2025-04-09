@@ -4,9 +4,11 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-// Fix: Make TooltipProvider a proper React component
-const TooltipProvider = ({ ...props }) => (
-  <TooltipPrimitive.Provider {...props} />
+// Fix: Make TooltipProvider a proper React component with children prop
+const TooltipProvider = ({ children, ...props }: TooltipPrimitive.TooltipProviderProps) => (
+  <TooltipPrimitive.Provider {...props}>
+    {children}
+  </TooltipPrimitive.Provider>
 )
 TooltipProvider.displayName = "TooltipProvider"
 
