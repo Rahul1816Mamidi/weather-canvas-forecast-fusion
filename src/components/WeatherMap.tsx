@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
@@ -23,33 +23,40 @@ interface WeatherMapProps {
 
 export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>("");
-  const [showTokenInput, setShowTokenInput] = useState<boolean>(true);
+  const map = useRef<maplibregl.Map | null>(null);
+  const [mapTilerToken, setMapTilerToken] = useState<string>(
+    localStorage.getItem('mapTilerToken') || ""
+  );
+  const [showTokenInput, setShowTokenInput] = useState<boolean>(!mapTilerToken);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapTilerToken) return;
 
-    // Initialize map
-    mapboxgl.accessToken = mapboxToken;
+    // Store the token in localStorage for future use
+    if (mapTilerToken) {
+      localStorage.setItem('mapTilerToken', mapTilerToken);
+    }
     
-    map.current = new mapboxgl.Map({
+    // Initialize map using MapTiler
+    const mapStyle = viewType === 'satellite' 
+      ? `https://api.maptiler.com/maps/satellite/style.json?key=${mapTilerToken}`
+      : `https://api.maptiler.com/maps/streets/style.json?key=${mapTilerToken}`;
+    
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: viewType === 'satellite' 
-        ? 'mapbox://styles/mapbox/satellite-v9'
-        : 'mapbox://styles/mapbox/light-v11',
+      style: mapStyle,
       center: [location.longitude, location.latitude],
       zoom: 9,
     });
 
     // Add navigation controls
     map.current.addControl(
-      new mapboxgl.NavigationControl(),
+      new maplibregl.NavigationControl(),
       'top-left'
     );
 
     // Add a marker for the current location
-    const marker = new mapboxgl.Marker()
+    new maplibregl.Marker()
       .setLngLat([location.longitude, location.latitude])
       .addTo(map.current);
 
@@ -143,7 +150,7 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
         map.current = null;
       }
     };
-  }, [mapboxToken, viewType, layers]);
+  }, [mapTilerToken, viewType, layers]);
 
   // Update map when time offset changes (for forecast animations)
   useEffect(() => {
@@ -152,7 +159,7 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
     // In a real app, this would update the map layers with new data based on the time offset
     // For demo purposes, we'll just slightly move the rain layer to simulate movement
     if (map.current.getSource('rain')) {
-      const rainSource = map.current.getSource('rain') as mapboxgl.GeoJSONSource;
+      const rainSource = map.current.getSource('rain') as maplibregl.GeoJSONSource;
       
       // Shift rain features based on time offset
       const baseFeatures = [
@@ -200,7 +207,7 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
   // Handle token input
   const handleTokenSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (mapboxToken.trim().length > 0) {
+    if (mapTilerToken.trim().length > 0) {
       setShowTokenInput(false);
     }
   };
@@ -210,19 +217,19 @@ export const WeatherMap = ({ viewType, layers, location, timeOffset }: WeatherMa
       <div className="p-6 flex flex-col items-center justify-center h-full w-full bg-muted/20">
         <Alert className="mb-4">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Mapbox API Token Required</AlertTitle>
+          <AlertTitle>MapTiler API Key Required</AlertTitle>
           <AlertDescription>
-            To display the weather radar map, please enter your Mapbox API token.
-            You can get a free token at <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="underline">mapbox.com</a>.
+            To display the weather radar map, please enter your MapTiler API key.
+            You can get a free key at <a href="https://cloud.maptiler.com/account/keys/" target="_blank" rel="noopener noreferrer" className="underline">cloud.maptiler.com</a>.
           </AlertDescription>
         </Alert>
         
         <form onSubmit={handleTokenSubmit} className="space-y-4 w-full max-w-md">
           <Input 
             type="text" 
-            value={mapboxToken} 
-            onChange={(e) => setMapboxToken(e.target.value)} 
-            placeholder="Enter your Mapbox token" 
+            value={mapTilerToken} 
+            onChange={(e) => setMapTilerToken(e.target.value)} 
+            placeholder="Enter your MapTiler API key" 
             className="w-full"
           />
           <Button type="submit" className="w-full">

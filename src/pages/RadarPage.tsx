@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import Header from "@/components/Header";
 import { useWeatherStore } from "@/lib/store";
@@ -6,10 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toggle } from "@/components/ui/toggle";
-import { Map, Globe, Layers, Umbrella, CloudSnow, Wind, Zap, ZoomIn, ZoomOut, Play, Pause, Plus, Minus } from "lucide-react";
+import { Map, Globe, Layers, Umbrella, CloudSnow, Wind, Zap, ZoomIn, ZoomOut, Play, Pause } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WeatherMap } from "@/components/WeatherMap";
 
 const RadarPage = () => {
