@@ -2,7 +2,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
-import { Sun, Moon, Menu, X } from 'lucide-react';
+import { Sun, Moon, Menu, X, Map } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 
@@ -13,6 +13,7 @@ const Header = () => {
     { name: 'Home', path: '/' },
     { name: 'Forecast', path: '/forecast' },
     { name: 'Locations', path: '/locations' },
+    { name: 'Radar', path: '/radar' },
     { name: 'Alerts', path: '/alerts' },
     { name: 'Custom Alerts', path: '/custom-alerts' },
     { name: 'Air Quality', path: '/air-quality' },

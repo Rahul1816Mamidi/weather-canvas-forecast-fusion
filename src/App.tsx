@@ -12,6 +12,7 @@ import AlertsPage from "./pages/AlertsPage";
 import AirQualityPage from "./pages/AirQualityPage";
 import SettingsPage from "./pages/SettingsPage";
 import CustomAlertsPage from "./pages/CustomAlertsPage";
+import RadarPage from "./pages/RadarPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/air-quality" element={<AirQualityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/custom-alerts" element={<CustomAlertsPage />} />
+            <Route path="/radar" element={<RadarPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

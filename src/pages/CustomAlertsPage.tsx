@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Header from "@/components/Header";
 import { useWeatherStore } from "@/lib/store";
@@ -12,7 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -40,9 +38,9 @@ const formSchema = z.object({
   value: z.coerce.number(),
   locations: z.array(z.string()).min(1, { message: "Select at least one location" }),
   channels: z.object({
-    email: z.boolean(),
-    push: z.boolean(),
-    sms: z.boolean(),
+    email: z.boolean().default(true),
+    push: z.boolean().default(true),
+    sms: z.boolean().default(false),
   }),
 });
 
@@ -69,10 +67,30 @@ const CustomAlertsPage = () => {
 
   const handleCreateAlert = (data: z.infer<typeof formSchema>) => {
     if (editingAlertId) {
-      updateCustomAlert(editingAlertId, data);
+      updateCustomAlert(editingAlertId, {
+        name: data.name,
+        type: data.type,
+        condition: data.condition,
+        value: data.value,
+        locations: data.locations,
+        channels: {
+          email: data.channels.email,
+          push: data.channels.push,
+          sms: data.channels.sms,
+        }
+      });
     } else {
       addCustomAlert({
-        ...data,
+        name: data.name,
+        type: data.type,
+        condition: data.condition,
+        value: data.value,
+        locations: data.locations,
+        channels: {
+          email: data.channels.email,
+          push: data.channels.push,
+          sms: data.channels.sms,
+        },
         isActive: true,
       });
     }
